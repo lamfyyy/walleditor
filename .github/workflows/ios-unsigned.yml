@@ -1,0 +1,62 @@
+name: iOS unsigned IPA
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  core-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - run: python3 -m pip install pillow
+      - run: python3 tools/verify_assets.py
+      - run: npm test
+      - run: npm run export:sample && python3 tools/check_tendies.py out/demo.tendies
+
+  build-ios:
+    needs: core-tests
+    runs-on: macos-15
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Select newest Xcode 26
+        run: |
+          X=$(ls -d /Applications/Xcode_26* | sort -V | tail -1)
+          echo "Using $X"; sudo xcode-select -s "$X"; xcodebuild -version
+      - run: npm install --no-audit --no-fund
+      - name: Align Expo SDK 57 versions
+        run: npx expo install --fix
+      - run: npx expo-doctor || true
+      - run: npm run typecheck
+      - run: npx expo prebuild --platform ios --clean
+      - name: Verify icon set was applied
+        run: |
+          diff -r assets/walleditor/AppIcon.appiconset ios/walleditor/Images.xcassets/AppIcon.appiconset
+      - name: Build unsigned (no Apple signing)
+        run: |
+          cd ios
+          xcodebuild -workspace walleditor.xcworkspace -scheme walleditor \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath ../build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tail -n 40
+      - name: Package IPA
+        run: |
+          APP=$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' | head -1)
+          mkdir -p Payload && cp -R "$APP" Payload/
+          zip -qry walleditor-unsigned.ipa Payload
+      - name: Inspect IPA
+        run: |
+          unzip -l walleditor-unsigned.ipa | tail -n 5
+          rm -rf chk && mkdir chk && unzip -q walleditor-unsigned.ipa -d chk
+          P=$(ls -d chk/Payload/*.app)
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$P/Info.plist")" = "com.yxwwx.walleditor"
+          lipo -archs "$P/$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$P/Info.plist")" | grep -q arm64
+          test -f "$P/Assets.car"
+          xcrun assetutil --info "$P/Assets.car" | grep -c AppIcon
+      - uses: actions/upload-artifact@v4
+        with: { name: walleditor-unsigned-ipa, path: walleditor-unsigned.ipa }

@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "walleditor",
+    "slug": "walleditor",
+    "scheme": "walleditor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/walleditor/AppIcon.appiconset/icon-light.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.yxwwx.walleditor",
+      "supportsTablet": false,
+      "deploymentTarget": "26.0",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleLocalizations": ["ru", "en"],
+        "CFBundleDevelopmentRegion": "ru",
+        "UIFileSharingEnabled": true,
+        "LSSupportsOpeningDocumentsInPlace": true,
+        "NSPhotoLibraryUsageDescription": "Нужен доступ к фото и видео, чтобы добавлять их слоями в обои.",
+        "UIDesignRequiresCompatibility": false,
+        "UTExportedTypeDeclarations": [
+          {
+            "UTTypeIdentifier": "com.yxwwx.walleditor.tendies",
+            "UTTypeDescription": "PosterBoard Tendies",
+            "UTTypeConformsTo": ["public.data", "public.zip-archive"],
+            "UTTypeTagSpecification": { "public.filename-extension": ["tendies"] }
+          }
+        ],
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "Tendies",
+            "CFBundleTypeRole": "Editor",
+            "LSHandlerRank": "Alternate",
+            "LSItemContentTypes": ["com.yxwwx.walleditor.tendies"]
+          }
+        ]
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-localization",
+      "expo-video",
+      ["expo-image-picker", { "photosPermission": "Нужен доступ к фото и видео, чтобы добавлять их слоями в обои." }],
+      ["expo-build-properties", { "ios": { "deploymentTarget": "26.0" } }],
+      "./plugins/withAppIconSet.js"
+    ],
+    "experiments": { "typedRoutes": false }
+  }
+}

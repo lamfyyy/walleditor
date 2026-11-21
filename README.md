@@ -1,50 +1,47 @@
 # walleditor
 
-`walleditor` is a personal, non-commercial Expo/React Native editor prototype for layered animated wallpapers. It includes Telegram-style bottom navigation (`Главная`, `Проекты`, `Настройки`), a local demo project built from the supplied assets, a Liquid Glass-inspired editor surface, three themes, a looping preview with animated Kawarp texture motion, local autosave, duplicate-before-experimenting, layer visibility controls, and an export validation panel. Settings includes an `О приложении / Логи` sub-tab with persistent local activity and error messages.
+Личное некоммерческое iPhone-приложение для создания многослойных динамических обоев и экспорта `.tendies`.
+Bundle ID `com.yxwwx.walleditor` · Expo SDK 57 · React Native 0.86 · TypeScript · Expo Router · NativeWind · AsyncStorage.
+Автор: Даня Янти (yntheee/yxwwx). Анимированный фон: [Kawarp](https://kawarp.vercel.app/) (Better Lyrics, AGPL-3.0).
 
-## Build locally or from a GitHub checkout
+## Статус — читайте честно
+| Что | Состояние |
+|---|---|
+| Ядро (модель, CAML, plist, сборка/проверка/импорт `.tendies`, undo/redo, snap) | Написано; `npm test` — 38 проверок; строгий `tsc` по ядру чист |
+| Экраны/UI React Native | Написаны, **не компилировались и не запускались** (нет сети/Xcode в среде разработки) |
+| `npx expo install --fix`, версии пакетов | **Не проверено**: версии в `package.json` выставлены по SDK 57, CI выравнивает их командой `expo install --fix` |
+| Unsigned IPA | **Не собран.** Workflow есть (`.github/workflows/ios-unsigned.yml`), фактически не запускался |
+| Экспорт в Pocket Poster / Nugget на устройстве | **Не проверен.** См. `docs/DEVICE_TEST.md` и `src/core/verification.ts` |
 
-Use Node.js 20+ and pnpm 9. Clone the repository, install dependencies, then run the checks:
+## Дополнительно реализовано (сверх ТЗ)
+- **Сверка предпросмотра с экспортом** (`src/core/consistency.ts`): после сборки CAML парсится и сравнивается с тем, что рисует редактор (позиция, поворот, масштаб, прозрачность на 13 моментах цикла). Нашла и помогла исправить ошибку: анимация прозрачности игнорировала прозрачность слоя. Это проверка согласованности двух реализаций, а не гарантия, что PosterBoard прочитает файл.
+- **Выравнивание и вписывание** слоёв (края, центр, safe areas; contain/cover/stretch с учётом обрезки).
+- **«Сделать бесшовным»**: автоисправление разрыва на стыке цикла.
+- **Резервная копия проекта** `.walleditor` (редактируемый проект, отдельно от `.tendies`); восстановление всегда создаёт новый проект, небезопасные пути отбрасываются.
+- **Шаблоны холста** (сохранение/удаление) и ввод HEX-цветов Kawarp.
 
+## Что сверено с источниками
+`descriptors/<UUID>/…` и поиск дескрипторов (PosterBoardManager.swift), каркас CAML `_FLOATING → Chip → …`, `index.xml`, покадровая анимация `contents` (VideoHandler.swift), ключи `identifier`, `wallpaperRepresentingIdentifier`, `wallpaperRepresentingFileName`.
+**Не подтверждено:** полный набор ключей plist, запись keyPath-анимаций (position/rotation/scale/opacity), CATextLayer, фигуры. Они помечены `unverified` и показываются в экспорте как экспериментальные. Если импортировать известный рабочий `.tendies`, его plist сохраняются как база для экспорта.
+
+## Сборка unsigned IPA (GitHub Actions)
+1. Запушьте проект в репозиторий, запустите workflow **iOS unsigned IPA** (Actions → Run workflow).
+2. Артефакт `walleditor-unsigned-ipa` → `walleditor-unsigned.ipa`. Apple-аккаунт и подпись не нужны.
+3. Подпишите самостоятельно через SideStore / LiveContainer ([docs.sidestore.io](https://docs.sidestore.io/)).
+Не считайте IPA готовым, пока job не зелёный и артефакт не проверен (шаг «Inspect IPA» проверяет Bundle ID, arm64, иконку).
+
+## Локальная проверка без iOS
 ```bash
-git clone <your-github-repository-url>
-cd walleditor
-pnpm install
-pnpm check
-pnpm lint
-pnpm test
+npm install
+python3 tools/verify_assets.py     # исходные ассеты не изменены, иконка валидна
+npm test                           # ядро
+npm run export:sample && python3 tools/check_tendies.py out/demo.tendies
 ```
 
-For an Expo Web development preview:
+## Ассеты
+`assets/walleditor/{background,asset1,asset2}.png` и `AppIcon.appiconset/` используются как есть; хэши — `tools/assets.sha256.json`.
+`asset2.png` имеет прозрачное поле слева (31 px): в демо слой обрезается неразрушающе (`crop`), файл не меняется.
+`plugins/withAppIconSet.js` копирует ваш `AppIcon.appiconset` в Xcode-проект после `prebuild`; CI делает `diff -r`.
 
-```bash
-pnpm dev:metro
-```
-
-For native development, install the current Expo tooling and use the generated app configuration. Keep the bundle identifier `com.yxwwx.walleditor`; do not commit personal signing certificates, Apple credentials, Expo tokens, or `.env` files. Copy `.env.example` to `.env` only when a future backend or build service requires local values.
-
-## Build an iOS IPA from GitHub
-
-The repository includes `eas.json` and a manually triggered workflow at `.github/workflows/build-ios.yml`. In your own GitHub repository, add an `EXPO_TOKEN` Actions secret, connect the project to your own Expo account, and configure Apple signing when EAS asks for it. Then open **Actions → Build iOS IPA → Run workflow**. The workflow starts an EAS internal-distribution build; the resulting IPA download URL is provided by EAS after the build completes. A testable iPhone IPA cannot be produced without your Apple/Expo signing credentials.
-
-You can also build locally from the repository:
-
-```bash
-npm install --global eas-cli
-eas login
-eas build --platform ios --profile preview
-```
-
-## Expo/EAS handoff
-
-The repository is intentionally source-first. A user with their own Expo/EAS account can connect the GitHub repository, configure iOS signing in their own account, and run the appropriate EAS build command from their CI or local machine. The exact native artifact is not included in this repository and must be produced and verified by the user’s own build environment.
-
-Before a real device handoff, verify the app on the target iPhone and record the tested iOS, Nugget, and Pocket Poster versions. A Web Preview confirms UI and JavaScript behavior only; it does not prove iOS Files integration, CAML/PosterBoard application, safe-area clock overlap, or SideStore installation.
-
-## Manual `.tendies` flow
-
-The app does not call Pocket Poster, upload archives automatically, or control the import process. Save a validated `.tendies` file through Files/Share Sheet, open Pocket Poster manually, and import the file there. The export screen intentionally shows an unverified warning until the PosterBoard structure is validated on a real target setup.
-
-## Included supplied assets
-
-The original `background.png`, `asset1.png`, `asset2.png`, and the complete `AppIcon.appiconset` are preserved under `assets/walleditor/`. Native branding copies are placed under `assets/images/`; the original source files remain unchanged.
+## Лицензия
+AGPL-3.0-only (так как встраивается `@kawarp/core`, AGPL-3.0). Добавьте официальный текст лицензии в `LICENSE` перед публикацией. Распространяя IPA, публикуйте и исходники.
