@@ -3,7 +3,7 @@
     "name": "walleditor",
     "slug": "walleditor",
     "scheme": "walleditor",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/walleditor/AppIcon.appiconset/icon-light.png",
     "userInterfaceStyle": "automatic",
@@ -11,10 +11,13 @@
       "bundleIdentifier": "com.yxwwx.walleditor",
       "supportsTablet": false,
       "deploymentTarget": "26.0",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "CFBundleLocalizations": ["ru", "en"],
+        "CFBundleLocalizations": [
+          "ru",
+          "en"
+        ],
         "CFBundleDevelopmentRegion": "ru",
         "UIFileSharingEnabled": true,
         "LSSupportsOpeningDocumentsInPlace": true,
@@ -24,8 +27,15 @@
           {
             "UTTypeIdentifier": "com.yxwwx.walleditor.tendies",
             "UTTypeDescription": "PosterBoard Tendies",
-            "UTTypeConformsTo": ["public.data", "public.zip-archive"],
-            "UTTypeTagSpecification": { "public.filename-extension": ["tendies"] }
+            "UTTypeConformsTo": [
+              "public.data",
+              "public.zip-archive"
+            ],
+            "UTTypeTagSpecification": {
+              "public.filename-extension": [
+                "tendies"
+              ]
+            }
           }
         ],
         "CFBundleDocumentTypes": [
@@ -33,7 +43,9 @@
             "CFBundleTypeName": "Tendies",
             "CFBundleTypeRole": "Editor",
             "LSHandlerRank": "Alternate",
-            "LSItemContentTypes": ["com.yxwwx.walleditor.tendies"]
+            "LSItemContentTypes": [
+              "com.yxwwx.walleditor.tendies"
+            ]
           }
         ]
       }
@@ -42,10 +54,24 @@
       "expo-router",
       "expo-localization",
       "expo-video",
-      ["expo-image-picker", { "photosPermission": "Нужен доступ к фото и видео, чтобы добавлять их слоями в обои." }],
-      ["expo-build-properties", { "ios": { "deploymentTarget": "26.0" } }],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Нужен доступ к фото и видео, чтобы добавлять их слоями в обои."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "26.0"
+          }
+        }
+      ],
       "./plugins/withAppIconSet.js"
     ],
-    "experiments": { "typedRoutes": false }
+    "experiments": {
+      "typedRoutes": false
+    }
   }
 }
