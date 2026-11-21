@@ -1,0 +1,1 @@
+{"routes":[{"path":"/","title":"Главная"},{"path":"/projects","title":"Проекты"},{"path":"/settings","title":"Настройки"},{"path":"/oauth/callback","title":"OAuth callback"}]}
